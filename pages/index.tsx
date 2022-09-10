@@ -2,9 +2,11 @@ import type { NextPage } from 'next'
 import { useEffect, useState } from 'react';
 import { WalletApiCip0030, SupportedWallet } from '@cardano/wallet';
 import ListNftForm from "@components/ListNftForm";
+import { Lucid, Blockfrost } from 'lucid-cardano';
 
 const Home: NextPage = () => {
   const [selectedWallet, setSelectedWallet] = useState("undefined" as SupportedWallet);
+  const [lucid, setLucid] = useState(undefined as Lucid | undefined);
   const [wallet, setWallet] = useState(undefined as WalletApiCip0030 | undefined);
   const [address, setAddress] = useState(undefined as string | undefined);
 
@@ -21,24 +23,32 @@ const Home: NextPage = () => {
         throw new Error("WALLET_NOT_INSTALLED");
       }
       const walletEnabled = await walletApi.enable();
+
+      const newLucid = await Lucid.new(
+          new Blockfrost(
+          "https://cardano-mainnet.blockfrost.io/api/v0",
+          "mainnetGXsABkjQDCdtDNrPdRZJFeqaPH41BPSY"
+          ),
+          "Mainnet"
+      );
+      newLucid.selectWallet(walletEnabled);
+      setLucid(newLucid);
       setWallet(walletEnabled);
-      setAddress((await walletEnabled.getUsedAddresses())[0]);
+      setAddress(await newLucid.wallet.address());
     }
-    if(!wallet) {
+    if(!wallet || !lucid) {
       connectWallet();
     }
-  }, [selectedWallet, wallet]);
+  }, [selectedWallet, wallet, lucid]);
 
-  if(!wallet) {
+  if(!wallet || !lucid) {
     return <button onClick={() => setSelectedWallet("nami")}>Connect Nami</button>
   }
 
-  console.log(`walletLook: ${wallet.getUtxos}`);
-
   return (
     <div>
-      <p>{address ? "connected" : "not connected"}</p>
-      <ListNftForm wallet={wallet} />
+      <p>{address ? address : "not connected"}</p>
+      <ListNftForm lucid={lucid} />
     </div>
   )
 }
