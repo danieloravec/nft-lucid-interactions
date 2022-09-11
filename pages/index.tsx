@@ -19,7 +19,6 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     async function connectWallet() {
-      console.log(`selectedWallet: ${selectedWallet}`);
       if(selectedWallet === undefined) {
         disconnectWallet();
         return;
