@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { makeJpgV2Listing, cancelJpgV2Listing, Royalty, ListingParams } from "@cardano/transactions";
-import { toHex } from "@utils";
-import { WalletApiCip0030 } from "@cardano/wallet";
-import { Lucid, Blockfrost } from "lucid-cardano";
+import React, { useState } from "react";
+import { makeJpgV2Listing, cancelJpgV2Listing } from "@cardano/transactions";
+import { Lucid } from "lucid-cardano";
+import { ListingParams, Royalty } from "@cardano/types";
 
-type ListNftFormProps = {
-    lucid: Lucid;
-}
+function NftForm(props: {lucid: Lucid}) {
 
-function ListNftForm(props: ListNftFormProps) {
-
-    const [policyId, setPolicyId] = useState("95ab9a125c900c14cf7d39093e3577b0c8e39c9f7548a8301a28ee2d");
-    const [tokenName, setTokenName] = useState("AdaIdiot7179");
+    const [policyId, setPolicyId] = useState("");
+    const [tokenName, setTokenName] = useState("");
     const [price, setPrice] = useState(10000000);
-    const [royaltyAddr, setRoyaltyAddr] = useState("addr1q86rfvkfsxx65sv7vvd9yrnthxzr0twkcev0aefvrcr6yrtwftm6mnlk0uwpuljcqkmuj923y5yjm4w7ayna6slvvscqra2w2j");
-    const [royaltyRate, setRoyaltyRate] = useState(0.03);
+    const [royaltyAddr, setRoyaltyAddr] = useState("");
+    const [royaltyRate, setRoyaltyRate] = useState(0);
 
     const getCurrentListingParams = (): ListingParams => {
         return {
@@ -28,14 +23,10 @@ function ListNftForm(props: ListNftFormProps) {
         }
     }
 
-    const handleList = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const handleUsingFn = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, fn: typeof makeJpgV2Listing | typeof cancelJpgV2Listing) => {
         e.preventDefault();
-        await makeJpgV2Listing(getCurrentListingParams(), props.lucid);
-    };
-
-    const handleCancel = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        e.preventDefault();
-        await cancelJpgV2Listing(getCurrentListingParams(), props.lucid);
+        const txHash = await fn(getCurrentListingParams(), props.lucid);
+        alert(`Submitted txId: ${txHash}`);
     }
 
     return (
@@ -55,10 +46,10 @@ function ListNftForm(props: ListNftFormProps) {
             <label htmlFor="royalty-rate">Royalty rate</label>
             <input id="royalty-rate" type="number" value={royaltyRate} onChange={(e) => setRoyaltyRate(Number(e.currentTarget.value))} />
             <br/>
-            <button onClick={handleList}>List</button>
-            <button onClick={handleCancel}>Cancel</button>
+            <button onClick={(e) => handleUsingFn(e, makeJpgV2Listing)}>List</button>
+            <button onClick={(e) => handleUsingFn(e, cancelJpgV2Listing)}>Cancel</button>
         </form>
     );
 }
 
-export default ListNftForm;
+export default NftForm;
